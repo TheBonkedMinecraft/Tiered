@@ -28,8 +28,6 @@ public class ModifierUtils {
         List < Identifier > potentialAttributes = new ArrayList < > ();
         List < Integer > attributeWeights = new ArrayList < > ();
 
-        // collect all valid attributes for the given item and their weights
-
         Tiered.ATTRIBUTE_DATA_LOADER.getItemAttributes().forEach((id, attribute) -> {
         if (attribute.isValid(Registry.ITEM.getId(item.getItem())) && (attribute.getWeight() > 0 || reforge)) {
             potentialAttributes.add(new Identifier(attribute.getID()));
@@ -39,35 +37,14 @@ public class ModifierUtils {
         if (potentialAttributes.size() == 0) {
             return null;
         }
-
-        if (reforge && attributeWeights.size() > 2) {
-            SortList.concurrentSort(attributeWeights, attributeWeights, potentialAttributes);
-            int maxWeight = attributeWeights.get(attributeWeights.size() - 1);
-            for (int i = 0; i < attributeWeights.size(); i++) {
-                if (attributeWeights.get(i) > maxWeight / 2) {
-                    attributeWeights.set(i, (int)(attributeWeights.get(i) * ConfigInit.CONFIG.reforge_modifier));
-                }
-            }
-        }
-        // Luck
-        if (playerEntity != null) {
-            int luckMaxWeight = Collections.max(attributeWeights);
-            for (int i = 0; i < attributeWeights.size(); i++) {
-                if (attributeWeights.get(i) > luckMaxWeight / 3) {
-                    attributeWeights.set(i, (int)(attributeWeights.get(i) * (1.0f - ConfigInit.CONFIG.luck_reforge_modifier * playerEntity.getLuck())));
-                }
-            }
-        }
-        //if (item.getDefaultStack().hasNbt() && item.getDefaultStack().getSubNbt(Tiered.NBT_SUBTAG_KEY) != null) {
         Identifier tier = new Identifier(item.getOrCreateSubNbt(Tiered.NBT_SUBTAG_KEY).getString(Tiered.NBT_SUBTAG_DATA_KEY));
-        List < String > names;
-        names = List.of(new String[] {
+        List<String> names;
+        names = List.of(new String[]{
                 "common",
                 "uncommon",
                 "rare",
                 "epic",
                 "legendary",
-                "unique",
                 "unique"
         });
         var tempRarity = tier.toString();
@@ -77,10 +54,10 @@ public class ModifierUtils {
         } else {
             rarity = tier.getPath().split("_")[0];
         }
-        var nextTier = names.get(names.indexOf(rarity) == 5 ? names.indexOf(rarity) : names.indexOf(rarity) + 1);
-        var target = new ArrayList <Identifier>();
-        var current = new ArrayList <Identifier>();
-        for (Identifier potentialAttribute: potentialAttributes) {
+        var nextTier = names.get(names.indexOf(rarity) >= 4 ? names.indexOf(rarity) : names.indexOf(rarity) + 1);
+        var target = new ArrayList<Identifier>();
+        var current = new ArrayList<Identifier>();
+        for (Identifier potentialAttribute : potentialAttributes) {
             if (Objects.equals(potentialAttribute.getPath().split("_")[0], nextTier)) {
                 target.add(potentialAttribute);
             } else if (Objects.equals(potentialAttribute.getPath().split("_")[0], rarity)) {
@@ -88,13 +65,11 @@ public class ModifierUtils {
             }
         }
 
-        try{
+        try {
             Random rand = new Random();
-
             int min = 0;
             int max = 100;
             int random_int = (int) Math.floor(Math.random() * (max - min + 1) + min);
-
             return random_int <= 10 ? target.get(rand.nextInt(target.size())) : current.get(rand.nextInt(current.size()));
         } catch (Exception ignored) {}
         return null;
@@ -169,7 +144,7 @@ public class ModifierUtils {
                 if (!nbtKeys.isEmpty()) {
                     for (int i = 0; i < nbtKeys.size(); i++) {
                         if (!nbtKeys.get(i).equals("Damage")) {
-                            if (!nbtKeys.get(i).contains("tiered")) {
+                            if (!nbtKeys.get(i).contains("Tiered")) {
                                 itemStack.getNbt().remove(nbtKeys.get(i));
                             }
                         }
